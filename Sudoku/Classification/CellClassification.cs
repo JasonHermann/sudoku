@@ -19,6 +19,5 @@ namespace Sudoku.Classification
 
     public class CellClassification
     {
-        public Point
     }
 }
