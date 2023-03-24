@@ -14,7 +14,7 @@ namespace OpenCv
 {
     public static class Classifier
     {
-        public static TesseractEngine Engine = new TesseractEngine(@"D:\Assets\sudoku\tessdata\", "eng", EngineMode.Default)
+        public static TesseractEngine Engine = new TesseractEngine(@"../D:\Assets\sudoku\tessdata\", "eng", EngineMode.Default)
         {
             DefaultPageSegMode = PageSegMode.SingleChar,
         };
