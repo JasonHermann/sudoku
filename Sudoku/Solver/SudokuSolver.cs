@@ -46,6 +46,16 @@ namespace Sudoku
             return true;
         }
 
+        public static int SolvedCells(FastSudoku sudoku)
+        {
+            var solved = 0;
+            for (int i = 0; i < Constants.CellCount; i++)
+            {
+                if (sudoku.Cells[i] != 0) solved++;
+            }
+            return solved;
+        }
+
         public static bool IsFinished(FastSudoku sudoku)
         {
             for (int i = 0; i < Constants.CellCount; i++)

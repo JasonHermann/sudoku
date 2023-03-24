@@ -1,29 +1,48 @@
 ﻿namespace Sudoku
 {
-    public class SudokuState
+    public class SudokuPuzzle
     {
         public const byte RowsCount = 9;
         public const byte ColumnsCount = 9;
         public const byte SegmentsCount = 9;
 
-        public SudokuState()
+        public SudokuPuzzle()
         {
             Grid = new byte[RowsCount * ColumnsCount];
         }
 
-        public SudokuState(string[] initial) : this()
+
+        public SudokuPuzzle(byte[] initial) : this()
+        {
+            InitialSetup(initial);
+        }
+
+        public SudokuPuzzle(string[] initial) : this()
+        {
+            var digits = initial.SelectMany(r => r.Split(" ", StringSplitOptions.None)).Select(d => byte.Parse(d)).ToArray();
+            InitialSetup(digits);
+        }
+
+        public SudokuPuzzle(char[] initial) : this()
+        {
+            var digits = initial.Select(d => (byte) (d - '0')).ToArray();
+            InitialSetup(digits);
+        }
+
+        private void InitialSetup(byte[] initial)
         {
             byte rowNumber = 0;
-            foreach (var row in initial)
+            byte columnNumber = 0;
+            foreach (var digit in initial)
             {
-                var digits = row.Split(" ", StringSplitOptions.None);
-                byte columnNumber = 0;
-                foreach (var digit in digits)
+                Set(rowNumber, columnNumber, digit);
+                columnNumber++;
+                if (columnNumber == 9)
                 {
-                    Set(rowNumber, columnNumber, byte.Parse(digit));
-                    columnNumber++;
+                    columnNumber = 0;
+                    rowNumber++;
+
                 }
-                rowNumber++;
             }
         }
 
@@ -55,7 +74,7 @@
         {
             get
             {
-                return SudokuState.IsGridValid(Grid);
+                return SudokuPuzzle.IsGridValid(Grid);
             }
         }
 
@@ -89,7 +108,6 @@
 
         public static bool IsGridValid(byte[] grid)
         {
-
             // Check Rows
             for (int row = 0; row < RowsCount; row++)
             {

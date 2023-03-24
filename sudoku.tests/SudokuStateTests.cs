@@ -12,7 +12,7 @@ namespace sudoku.tests
             // Arrange
 
             // Act
-            var board = new SudokuState();
+            var board = new SudokuPuzzle();
 
             // Assert
             Assert.IsNotNull(board);
@@ -24,7 +24,7 @@ namespace sudoku.tests
         public void SetupBoard_AddNumbers_StateWorks()
         {
             // Arrange
-            var board = new SudokuState();
+            var board = new SudokuPuzzle();
 
             // Act
             board.Set(0, 0, 1);
@@ -54,7 +54,7 @@ namespace sudoku.tests
         public void SetupBoard_AddNumbers_Invalid_StateWorks()
         {
             // Arrange
-            var board = new SudokuState();
+            var board = new SudokuPuzzle();
 
             // Act
             board.Set(0, 0, 1);
@@ -91,7 +91,7 @@ namespace sudoku.tests
                 "3 8 2 6 5 4 7 9 1",
                 "4 1 5 7 9 2 8 3 6",
             };
-            var board = new SudokuState(input);
+            var board = new SudokuPuzzle(input);
             Assert.IsNotNull(board);
             Assert.AreEqual(true, board.IsValid);
             Assert.AreEqual(true, board.IsFinished);
@@ -120,7 +120,7 @@ namespace sudoku.tests
                 "9 4 6 1 8 5 7 3 2",
                 "8 5 2 6 7 3 1 4 9",
             };
-            board = new SudokuState(input);
+            board = new SudokuPuzzle(input);
             Assert.IsNotNull(board);
             Assert.AreEqual(true, board.IsValid);
             Assert.AreEqual(true, board.IsFinished);
