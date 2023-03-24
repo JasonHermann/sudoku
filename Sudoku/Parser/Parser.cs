@@ -44,11 +44,11 @@ namespace Sudoku
         /// </returns>
         public static int[] GridFromString(string sudoku, ParserAttributes parserAttributes)
         {
-            if((parserAttributes & ParserAttributes.List) != 0)
+            if ((parserAttributes & ParserAttributes.List) != 0)
             {
                 return ParseList(sudoku, parserAttributes);
             }
-            else if((parserAttributes & ParserAttributes.Rows) != 0)
+            else if ((parserAttributes & ParserAttributes.Rows) != 0)
             {
                 return ParseRows(sudoku, parserAttributes);
             }
@@ -114,7 +114,7 @@ namespace Sudoku
                     else
                         output[cell] = c - '0';
 
-                    if (delimiter != Char.MinValue)
+                    if (delimiter != char.MinValue)
                         expectedToken = Tokens.DigitDelimiter;
 
                     cell++;
@@ -146,9 +146,9 @@ namespace Sudoku
             {
                 char digit = sudokuGrid[i] == 0 ? emptyDigit : (char)('0' + sudokuGrid[i]);
                 output.Append(digit);
-                if (emptyDigit != Char.MinValue)
+                if (emptyDigit != char.MinValue)
                     output.Append(delimiter);
-                if ((i+1) % 9 == 0)
+                if ((i + 1) % 9 == 0)
                     output.Append(rowDelimiter);
             }
             return output.ToString();
@@ -162,11 +162,11 @@ namespace Sudoku
             char delimiter = GetDelimiter(parserAttributes);
             char emptyDigit = GetEmptyDigit(parserAttributes);
 
-            for(int i = 0; i < sudokuGrid.Length; i++)
+            for (int i = 0; i < sudokuGrid.Length; i++)
             {
                 char digit = sudokuGrid[i] == 0 ? emptyDigit : (char)('0' + sudokuGrid[i]);
                 output.Append(digit);
-                if(emptyDigit != Char.MinValue)
+                if (emptyDigit != char.MinValue)
                     output.Append(delimiter);
             }
             return output.ToString();
