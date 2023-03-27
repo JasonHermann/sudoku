@@ -229,7 +229,6 @@ namespace Sudoku
                 for (int r = (column + 1) % 9; r != column; r = (r + 1) % 9)
                 {
                     Links[cell, index++] = row * 9 + r;
-                    ;
                 }
                 for (int c = (row + 1) % 9; c != row; c = (c + 1) % 9)
                 {

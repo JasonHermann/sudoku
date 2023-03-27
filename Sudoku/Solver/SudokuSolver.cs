@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Data.Common;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -65,7 +67,99 @@ namespace Sudoku
             }
             return true;
         }
-    
+
+        public static bool IsSolved(FastSudoku sudoku)
+        {
+            return IsFinished(sudoku) && IsValid(sudoku);
+        }
+
+        public static IEnumerable<FastSudoku> FindAllSolutions(FastSudoku sudoku)
+        {
+            // Reduce as much as possible.
+            sudoku = SolveAllCells(sudoku);
+            if (SudokuSolver.IsSolved(sudoku))
+            {
+                yield return sudoku;
+            }
+            else
+            {
+                // for every unsolved cell, iterate through all possible moves
+                var index_LowestCount = 0;
+                var pop_LowestCount = int.MaxValue;
+                for(int i = 0; i < Constants.CellCount; i++)
+                {
+                    var digit = sudoku.Cells[i];
+                    if(digit == 0) // Unsolved cell
+                    {
+                        var value = sudoku.Annotations_Cell[i]; // Possible digits for this cell
+                        var pop = PopCount[value]; // Number of possible digits 1 to 9.
+                        if (value != Constants.Solved && pop < pop_LowestCount)
+                        {
+                            index_LowestCount = i;
+                            pop_LowestCount = pop;
+
+                            if (pop_LowestCount == 1) // We don't need to keep looking if we find the lowest value (an unsolved cell with only one value).
+                                break;
+                        }
+                    }
+                }
+
+                var annotation = sudoku.Annotations_Cell[index_LowestCount];
+                for(int digit = 1; digit <=9 ; digit++)
+                {
+                    var digitValue = Constants.Values[digit];
+                    if((annotation & digitValue) != 0) // This digit is possible in this cell.
+                    {
+                        var puzzle = new FastSudoku(sudoku);
+                        puzzle.SetByCell(index_LowestCount, digitValue);
+
+                        foreach(var solution in FindAllSolutions(puzzle))
+                        {
+                            yield return solution;
+                        }
+                    }
+                }
+            }
+            yield break;
+        }
+
+        public static IEnumerable<SudokuPuzzle> FindAllSolutions(SudokuPuzzle sudoku)
+        {
+            if (sudoku.IsSolved)
+            {
+                yield return sudoku;
+            }
+            else
+            {
+                // for every unsolved cell, iterate through all possible moves
+                for (byte i = 0; i < Constants.RowCount; i++)
+                {
+                    for (byte j = 0; j < Constants.ColumnCount; j++)
+                    {
+                        var digit = sudoku.Get(i, j);
+                        if (digit == 0) // Unsolved cell
+                        {
+                            for (byte d = 1; d <= 9; d++)
+                            { 
+                                if (!sudoku.Rows[i].Contains(d) &&
+                                    !sudoku.Columns[j].Contains(d) &&
+                                    !sudoku.Boxes[(i/3) * 3 + (j/3)].Contains(d)) // This digit is possible in this cell.
+                                {
+                                    sudoku.Set(i, j, d);
+                                    foreach (var solution in FindAllSolutions(sudoku))
+                                    {
+                                        yield return solution;
+                                    }
+                                    sudoku.Set(i, j, 0);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            yield break;
+        }
+
         public static FastSudoku SolveAllCells(FastSudoku sudoku)
         {
             bool solvedCell = true;

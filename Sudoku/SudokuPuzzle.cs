@@ -6,9 +6,22 @@
         public const byte ColumnsCount = 9;
         public const byte SegmentsCount = 9;
 
+        public HashSet<int>[] Rows { get; set; }
+        public HashSet<int>[] Columns { get; set; }
+        public HashSet<int>[] Boxes { get; set; }
+
         public SudokuPuzzle()
         {
             Grid = new byte[RowsCount * ColumnsCount];
+            Rows    = new HashSet<int>[9];
+            Columns = new HashSet<int>[9];
+            Boxes   = new HashSet<int>[9];
+            for(int i = 0; i < 9; i++)
+            {
+                Rows[i] = new HashSet<int>();
+                Columns[i] = new HashSet<int>();
+                Boxes[i] = new HashSet<int>();
+            }
         }
 
 
@@ -50,13 +63,29 @@
 
         public void Set(byte row, byte column, byte value)
         {
-            Grid[row * ColumnsCount + column] = value;
+            var pos = row * ColumnsCount + column;
+            var current = Grid[pos];
+
+            if(current != 0)
+            {
+                Rows[row].Remove(current);
+                Columns[column].Remove(current);
+                Boxes[(row / 3) * 3 + (column / 3)].Remove(current);
+            }
+            Grid[pos] = value;
+            if (value != 0)
+            {
+                var valid = Rows[row].Add(value) && Columns[column].Add(value) && Boxes[(row / 3) * 3 + (column / 3)].Add(value);
+                if (!valid)
+                    throw new NotSupportedException("You set an incorrect digit.");
+            }
         }
 
         public byte Get(byte row, byte column)
         {
             return Grid[row * ColumnsCount + column];
         }
+
         public bool IsFinished
         {
             get

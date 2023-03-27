@@ -1,7 +1,9 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Sudoku;
+
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -66,17 +68,100 @@ namespace sudoku.tests
 
                     var digits = puzzle.ToCharArray().Select(x => (int)x - '0').ToArray();
                     var sudoku = new FastSudoku(digits);
-                    var answer = SudokuSolver.SolveAllCells(sudoku);
+                    var answers = SudokuSolver.FindAllSolutions(sudoku).Take(1);
 
+                    if (answers != null && answers.Any())
+                    {
+                        var answer = answers.FirstOrDefault();
+                        var fail = !SudokuSolver.IsValid(answer) || !SudokuSolver.IsFinished(answer) ||
+                                     81 != SudokuSolver.SolvedCells(answer);
+                        if (fail)
+                            failCount++;
 
-                    var fail = !SudokuSolver.IsValid(answer) || !SudokuSolver.IsFinished(answer) ||
-                                 81 != SudokuSolver.SolvedCells(answer);
-                    if (fail) failCount++;
+                        var solutionString = new String(answer.Cells.Select(x => (char)('0' + Constants.DigitLookup[x])).ToArray());
+                        Assert.AreEqual(solution, solutionString);
+                    }
+                    else
+                        failCount++;
                 }
             }
 
             Assert.AreEqual(0, failCount);
             Assert.AreEqual(9000000, count);
         }
+
+        [TestMethod]
+        public void TestRecursiveSearch()
+        {
+            // Arrange
+            var puzzle   = "000002534000010280200034000020000740906000300140203000708000001300009600460070803";
+            var solution = "671892534534617289289534176823961745956748312147253968798326451315489627462175893";
+
+            // Act
+            var digits = puzzle.ToCharArray().Select(x => (int)x - '0').ToArray();
+            var sudoku = new FastSudoku(digits);
+            var answers = SudokuSolver.FindAllSolutions(sudoku).Take(1);
+
+            Assert.IsNotNull(answers);
+            Assert.IsTrue(answers.Any());
+            var answer = answers.FirstOrDefault();
+            var fail = !SudokuSolver.IsValid(answer) || !SudokuSolver.IsFinished(answer) ||
+                         81 != SudokuSolver.SolvedCells(answer);
+
+            // Assert
+            Assert.IsFalse(fail);
+        }
+
+
+        [TestMethod]
+        public void FindASolution_EmptyGrid()
+        {
+            // Arrange
+            var puzzle   = "000000000000000000000000000000000000000000000000000000000000000000000000000000000";
+
+            // Act
+            var digits = puzzle.ToCharArray().Select(x => (int)x - '0').ToArray();
+            var sudoku = new FastSudoku(digits);
+
+            var watch = Stopwatch.StartNew();
+            var answers = SudokuSolver.FindAllSolutions(sudoku).Take(1000);
+
+            Assert.IsNotNull(answers);
+            Assert.IsTrue(answers.Any());
+            var answer = answers.Skip(999).FirstOrDefault();
+            var fail = !SudokuSolver.IsValid(answer) || !SudokuSolver.IsFinished(answer) ||
+                         81 != SudokuSolver.SolvedCells(answer);
+            watch.Stop();
+
+            // Assert
+            Assert.IsFalse(fail);
+        }
+
+        /// <summary>
+        /// This is incredibly slow.
+        /// </summary>
+        //[TestMethod]
+        //public void TestRecursiveSearch_SimplerImplementation()
+        //{
+        //    // Arrange
+        //    var puzzle = "000002534000010280200034000020000740906000300140203000708000001300009600460070803";
+        //    var solution = "671892534534617289289534176823961745956748312147253968798326451315489627462175893";
+
+        //    // Act
+        //    var digits = puzzle.ToCharArray().Select(x => (byte)((byte)x - '0')).ToArray();
+        //    var sudoku = new SudokuPuzzle(digits);
+        //    var answers = SudokuSolver.FindAllSolutions(sudoku).Take(1);
+
+        //    Assert.IsNotNull(answers);
+        //    Assert.IsTrue(answers.Any());
+        //    var answer = answers.FirstOrDefault();
+        //    Assert.IsNotNull(answer);
+        //    var fail = !answer.IsSolved;
+
+        //    // Assert
+        //    Assert.IsFalse(fail);
+        //}
+
+
     }
 }
