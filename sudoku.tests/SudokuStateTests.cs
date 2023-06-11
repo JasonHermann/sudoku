@@ -58,11 +58,17 @@ namespace sudoku.tests
 
             // Act
             board.Set(0, 0, 1);
-            board.Set(1, 0, 1);
-
+            try
+            {
+                board.Set(1, 0, 1);
+            }
+            catch
+            {
+                Assert.IsNotNull(board);
+                return;
+            }
             // Assert
-            Assert.IsNotNull(board);
-            Assert.AreEqual(false, board.IsValid);
+            Assert.Fail();
         }
 
         [TestMethod]

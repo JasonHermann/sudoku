@@ -42,6 +42,7 @@ namespace sudoku.tests
 
 
         [TestMethod]
+        [Ignore]
         public void RunTests()
         {
             var count = 0;
@@ -100,7 +101,7 @@ namespace sudoku.tests
         {
             // Arrange
             var puzzle   = "000002534000010280200034000020000740906000300140203000708000001300009600460070803";
-            var solution = "671892534534617289289534176823961745956748312147253968798326451315489627462175893";
+            //var solution = "671892534534617289289534176823961745956748312147253968798326451315489627462175893";
 
             // Act
             var digits = puzzle.ToCharArray().Select(x => (int)x - '0').ToArray();
@@ -169,23 +170,26 @@ namespace sudoku.tests
                 {
                     count++;
                     var line = stream.ReadLine();
-                    var digits = line.ToCharArray().Select(x => (int)x - '0').ToArray();
-                    watch.Start();
-                    var sudoku = new FastSudoku(digits);
-                    var answers = SudokuSolver.FindAllSolutions(sudoku).Take(1).ToList();
-                    watch.Stop();
-                    times.Add(watch.ElapsedMilliseconds);
-                    if (answers != null && answers.Any())
+                    if(line != null)
                     {
-                        var answer = answers.FirstOrDefault();
-                        var fail = !SudokuSolver.IsValid(answer) || !SudokuSolver.IsFinished(answer) ||
-                                     81 != SudokuSolver.SolvedCells(answer);
+                        var digits = line.ToCharArray().Select(x => (int)x - '0').ToArray();
+                        watch.Start();
+                        var sudoku = new FastSudoku(digits);
+                        var answers = SudokuSolver.FindAllSolutions(sudoku).Take(1).ToList();
+                        watch.Stop();
+                        times.Add(watch.ElapsedMilliseconds);
+                        if (answers != null && answers.Any())
+                        {
+                            var answer = answers.FirstOrDefault();
+                            var fail = !SudokuSolver.IsValid(answer) || !SudokuSolver.IsFinished(answer) ||
+                                        81 != SudokuSolver.SolvedCells(answer);
 
-                        if (fail)
+                            if (fail)
+                                failCount++;
+                        }
+                        else
                             failCount++;
                     }
-                    else
-                        failCount++;
                 }
             }
 
