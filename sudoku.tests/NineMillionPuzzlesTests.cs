@@ -25,6 +25,11 @@ namespace sudoku.tests
         /// </remarks>
         public string FilePath = Path.Combine(@"D:\assets\open\sudoku\", "sudoku.csv");
 
+        /// <summary>
+        /// https://codegolf.stackexchange.com/questions/190727/the-fastest-sudoku-solver
+        /// </summary>
+        public string FilePath_Stackoverflow = Path.Combine(@"D:\assets\open\sudoku\", "sudoku.txt");
+
         [TestInitialize]
         public void Initialize()
         {
@@ -136,6 +141,60 @@ namespace sudoku.tests
             // Assert
             Assert.IsFalse(fail);
         }
+
+        [TestMethod]
+        public void RunTests_StackOverflow()
+        {
+            var count = 0;
+            var failCount = 0;
+            var times = new List<long>();
+
+            // Arrange
+            using (var stream = new StreamReader(FilePath_Stackoverflow, new FileStreamOptions() { Access = FileAccess.Read, Mode = FileMode.Open }))
+            {
+                // First line of CSV
+                if (!stream.EndOfStream)
+                {
+                    var header = stream.ReadLine(); // Number of puzzles.
+                }
+                else
+                {
+                    Assert.Fail("File contains no header");
+                }
+
+                var watch = new Stopwatch();
+
+                // Act on each row
+                while (!stream.EndOfStream)
+                {
+                    count++;
+                    var line = stream.ReadLine();
+                    var digits = line.ToCharArray().Select(x => (int)x - '0').ToArray();
+                    watch.Start();
+                    var sudoku = new FastSudoku(digits);
+                    var answers = SudokuSolver.FindAllSolutions(sudoku).Take(1).ToList();
+                    watch.Stop();
+                    times.Add(watch.ElapsedMilliseconds);
+                    if (answers != null && answers.Any())
+                    {
+                        var answer = answers.FirstOrDefault();
+                        var fail = !SudokuSolver.IsValid(answer) || !SudokuSolver.IsFinished(answer) ||
+                                     81 != SudokuSolver.SolvedCells(answer);
+
+                        if (fail)
+                            failCount++;
+                    }
+                    else
+                        failCount++;
+                }
+            }
+
+            var maxTime = times.Max();
+            Debug.Print(maxTime.ToString());
+            Assert.AreEqual(0, failCount);
+        }
+
+
 
         /// <summary>
         /// This is incredibly slow.
