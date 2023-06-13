@@ -62,7 +62,7 @@ namespace Sudoku.Solver
                             digit++;
                             annotation >>= 1;
                         }
-                        puzzle.SetByCell(i, Constants.Values[digit]);
+                        puzzle.SetByCell(i, Constants.Values[digit], Constants.ValuesExtended[digit]);
                         break;
                     }
                     else

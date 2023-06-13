@@ -18,10 +18,10 @@ namespace sudoku.tests
             var sudoku = new FastSudoku();
 
             // Act
-            sudoku.SetByRowColumn(0, 6, Constants.Values[2]);
-            sudoku.SetByRowColumn(4, 5, Constants.Values[8]);
-            sudoku.SetByRowColumn(6, 1, Constants.Values[7]);
-            sudoku.SetByRowColumn(8, 8, Constants.Values[3]);
+            sudoku.SetByRowColumn(0, 6, Constants.Values[2], Constants.ValuesExtended[2]);
+            sudoku.SetByRowColumn(4, 5, Constants.Values[8], Constants.ValuesExtended[8]);
+            sudoku.SetByRowColumn(6, 1, Constants.Values[7], Constants.ValuesExtended[7]);
+            sudoku.SetByRowColumn(8, 8, Constants.Values[3], Constants.ValuesExtended[3]);
             // --------   --------   --------
             //          |          | 2        |
             //          |          |          |
@@ -54,8 +54,8 @@ namespace sudoku.tests
 
             // Act
             var copy = new FastSudoku(sudoku);
-            copy.SetByCell(0, 1);
-            sudoku.SetByCell(0, 2);
+            copy.SetByCell(0, 1, 1);
+            sudoku.SetByCell(0, 2, 16);
             for(int i = 0; i < 1000; i++)
             {
                 var test = new FastSudoku(sudoku);

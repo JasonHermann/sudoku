@@ -42,7 +42,6 @@ namespace sudoku.tests
 
 
         [TestMethod]
-        [Ignore]
         public void RunTests()
         {
             var count = 0;
@@ -149,6 +148,7 @@ namespace sudoku.tests
             var count = 0;
             var failCount = 0;
             var times = new List<long>();
+            var guesses = new List<int>();
 
             // Arrange
             using (var stream = new StreamReader(FilePath_Stackoverflow, new FileStreamOptions() { Access = FileAccess.Read, Mode = FileMode.Open }))
@@ -173,9 +173,11 @@ namespace sudoku.tests
                     if(line != null)
                     {
                         var digits = line.ToCharArray().Select(x => (int)x - '0').ToArray();
-                        watch.Start();
+                        watch.Restart();
                         var sudoku = new FastSudoku(digits);
+                        SudokuSolver.GuessCounter = 0;
                         var answers = SudokuSolver.FindAllSolutions(sudoku).Take(1).ToList();
+                        guesses.Add(SudokuSolver.GuessCounter);
                         watch.Stop();
                         times.Add(watch.ElapsedMilliseconds);
                         if (answers != null && answers.Any())
@@ -193,8 +195,12 @@ namespace sudoku.tests
                 }
             }
 
-            var maxTime = times.Max();
-            Debug.Print(maxTime.ToString());
+            Debug.Print(times.Average().ToString());
+            Debug.Print(times.Min().ToString());
+            Debug.Print(times.Max().ToString());
+            Debug.Print(guesses.Average().ToString());
+            Debug.Print(guesses.Min().ToString());
+            Debug.Print(guesses.Max().ToString());
             Assert.AreEqual(0, failCount);
         }
 

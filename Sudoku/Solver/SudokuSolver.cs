@@ -12,6 +12,7 @@ namespace Sudoku
     {
         public static readonly int[] PopCount;
 
+        public static int GuessCounter = 0; 
         static SudokuSolver()
         {
             PopCount = new int[513];
@@ -30,9 +31,9 @@ namespace Sudoku
             for (int i = 0; i < Constants.CellCount; i++)
             {
                 var v = sudoku.Cells[i];
-                var r = i / Constants.RowSize;
-                var c = i % Constants.ColumnSize;
-                var s = (r / 3) * 3 + (c / 3);
+                var r = Constants.RowPositions[i];
+                var c = Constants.ColumnPositions[i];
+                var s = Constants.SegmentPositions[i];
 
                 if ((rows[r] & v) != 0)
                     return false;
@@ -84,34 +85,52 @@ namespace Sudoku
             else
             {
                 // for every unsolved cell, iterate through all possible moves
-                var index_LowestCount = 0;
+                int[] popCount = new int[81];
+                var index_HighestNeighborCount = 0;
+                var highestNeighborCount = 0;
                 var pop_LowestCount = int.MaxValue;
-                for(int i = 0; i < Constants.CellCount; i++)
+                for (int i = 0; i < Constants.CellCount; i++)
                 {
                     var digit = sudoku.Cells[i];
                     if(digit == 0) // Unsolved cell
                     {
                         var value = sudoku.Annotations_Cell[i]; // Possible digits for this cell
                         var pop = PopCount[value]; // Number of possible digits 1 to 9.
-                        if (value != Constants.Solved && pop < pop_LowestCount)
-                        {
-                            index_LowestCount = i;
-                            pop_LowestCount = pop;
+                        popCount[i] = pop;
 
-                            if (pop_LowestCount == 1) // We don't need to keep looking if we find the lowest value (an unsolved cell with only one value).
-                                break;
+                        if (pop < pop_LowestCount)
+                        {
+                            pop_LowestCount = pop;
+                        }
+                    }
+                }
+                for(int i =0; i< Constants.CellCount; i++)
+                {
+                    if (popCount[i] == pop_LowestCount)
+                    {
+                        var nc = 0;
+                        for (int n = 0; n < Constants.LinkCount; n++)
+                        {
+                            nc += popCount[sudoku.Links[i, n]];
+                        }
+                        if(nc > highestNeighborCount)
+                        {
+                            highestNeighborCount = nc;
+                            index_HighestNeighborCount = i;
                         }
                     }
                 }
 
-                var annotation = sudoku.Annotations_Cell[index_LowestCount];
+                var annotation = sudoku.Annotations_Cell[index_HighestNeighborCount];
                 for(int digit = 1; digit <=9 ; digit++)
                 {
                     var digitValue = Constants.Values[digit];
+                    var digitValue_Extended = Constants.ValuesExtended[digit];
                     if((annotation & digitValue) != 0) // This digit is possible in this cell.
                     {
+                        GuessCounter++;
                         var puzzle = new FastSudoku(sudoku);
-                        puzzle.SetByCell(index_LowestCount, digitValue);
+                        puzzle.SetByCell(index_HighestNeighborCount, digitValue, digitValue_Extended);
 
                         foreach(var solution in FindAllSolutions(puzzle))
                         {
@@ -164,37 +183,47 @@ namespace Sudoku
         {
             bool solvedCell = true;
             bool isFinished = false;
+
             while (solvedCell == true && isFinished == false)
             {
-                solvedCell = false;
-                isFinished = true;
-
-                solvedCell |= PlaceFindingMethod_ByRow(sudoku);
-                solvedCell |= PlaceFindingMethod_ByColumn(sudoku);
-                solvedCell |= PlaceFindingMethod_BySegment(sudoku);
-                solvedCell |= PreemptiveSetsSearch_ByRow(sudoku);
-                solvedCell |= PreemptiveSetsSearch_ByColumn(sudoku);
-                solvedCell |= PreemptiveSetsSearch_BySegment(sudoku);
-                for (int cell = 0; cell < Constants.CellCount; cell++)
+                while (solvedCell == true && isFinished == false)
                 {
-                    var v = sudoku.Cells[cell];
-                    if (v == 0) // Unsolved
+                    solvedCell = false;
+                    isFinished = true;
+
+                    for (int cell = 0; cell < Constants.CellCount; cell++)
                     {
-                        var a = sudoku.Annotations_Cell[cell];
-                        if (PopCount[a] == 1 && a != Constants.Solved) // Candidate Checking Method
+                        var v = sudoku.Cells[cell];
+                        if (v == 0) // Unsolved
                         {
-                            sudoku.SetByCell(cell, a);
-                            solvedCell = true;
-                        }
-                        else
-                        {
-                            isFinished = false;
+                            var a = sudoku.Annotations_Cell[cell];
+                            var a_ext = sudoku.Annotations_CellExtended[cell];
+                            if (PopCount[a] == 1 && a != Constants.Solved) // Candidate Checking Method
+                            {
+                                sudoku.SetByCell(cell, a, a_ext);
+                                solvedCell = true;
+                            }
+                            else
+                            {
+                                // We found at least one unsolved cell.
+                                isFinished = false;
+                            }
                         }
                     }
+                    if (solvedCell) continue;
+                    solvedCell |= PlaceFindingMethod_ByRow(sudoku);
+                    if (solvedCell) continue;
+                    solvedCell |= PlaceFindingMethod_ByColumn(sudoku);
+                    if (solvedCell) continue;
+                    solvedCell |= PlaceFindingMethod_BySegment(sudoku);
                 }
-
+                // These are more expensive, so do them less often.
+                solvedCell |= PreemptiveSetsSearch_ByRow(sudoku);
+                if (solvedCell) continue;
+                solvedCell |= PreemptiveSetsSearch_ByColumn(sudoku);
+                if (solvedCell) continue;
+                solvedCell |= PreemptiveSetsSearch_BySegment(sudoku);
             }
-
             return sudoku;
         }
 
@@ -203,40 +232,29 @@ namespace Sudoku
             bool modifiedCell = false;
             for (int row = 0; row < Constants.RowCount; row++)
             {
-                for (int digit = 1; digit <= 9; digit++)
+                if (sudoku.Annotations_RowExtendedSum[row] == Constants.SectionSolvedExtended)
+                    continue;
+
+                var e = sudoku.Annotations_RowExtendedSum[row];
+                for(int digit = 1; digit <=9; digit++)
                 {
-                    var availablePlaces = 0;
-                    var baseRowIndex = row * 9;
+                    var mask = Constants.ValueExtendedMask[digit];
+                    var digitValue_Extended = Constants.ValuesExtended[digit];
                     var digitValue = Constants.Values[digit];
-                    var lastFoundCell = 0;
-                    if ((sudoku.Annotations_Row[row] & digitValue) != 0)
+
+                    if((e & mask) == digitValue_Extended)
                     {
                         for (int column = 0; column < Constants.ColumnCount; column++)
                         {
-                            if ((sudoku.Annotations_Cell[baseRowIndex + column] & digitValue) != 0)
+                            var cell = Constants.RowColumn[row, column];
+                            if ((sudoku.Annotations_Cell[cell] & digitValue) != 0)
                             {
-                                availablePlaces++;
-                                lastFoundCell = baseRowIndex + column;
+                                sudoku.SetByCell(cell, digitValue,digitValue_Extended);
+                                modifiedCell = true;
+                                e = sudoku.Annotations_RowExtendedSum[row];
+                                break;
                             }
                         }
-                        if(availablePlaces == 0)
-                        {
-                            // We have an error.
-
-                        }
-                        else if(availablePlaces == 1)
-                        {
-                            sudoku.SetByCell(lastFoundCell, digitValue);
-                            modifiedCell = true;
-                        }
-                        else
-                        {
-                            // No conclusion
-                        }
-                    }
-                    else
-                    {
-                        // This digit has already been solved for.
                     }
                 }
             }
@@ -246,41 +264,31 @@ namespace Sudoku
         static bool PlaceFindingMethod_ByColumn(FastSudoku sudoku)
         {
             bool modifiedCell = false;
-            for (int column = 0; column < Constants.ColumnCount; column++)
+            for (int col = 0; col < Constants.ColumnCount; col++)
             {
+                if (sudoku.Annotations_ColumnExtendedSum[col] == Constants.SectionSolvedExtended)
+                    continue;
+
+                var e = sudoku.Annotations_ColumnExtendedSum[col];
                 for (int digit = 1; digit <= 9; digit++)
                 {
-                    var availablePlaces = 0;
+                    var mask = Constants.ValueExtendedMask[digit];
+                    var digitValue_Extended = Constants.ValuesExtended[digit];
                     var digitValue = Constants.Values[digit];
-                    var lastFoundCell = 0;
-                    if ((sudoku.Annotations_Column[column] & digitValue) != 0)
+
+                    if ((e & mask) == digitValue_Extended)
                     {
                         for (int row = 0; row < Constants.RowCount; row++)
                         {
-                            if ((sudoku.Annotations_Cell[row * 9 + column] & digitValue) != 0)
+                            var cell = Constants.RowColumn[row, col];
+                            if ((sudoku.Annotations_Cell[cell] & digitValue) != 0)
                             {
-                                availablePlaces++;
-                                lastFoundCell = row * 9 + column;
+                                sudoku.SetByCell(cell, digitValue, digitValue_Extended);
+                                modifiedCell = true;
+                                e = sudoku.Annotations_ColumnExtendedSum[col];
+                                break;
                             }
                         }
-                        if (availablePlaces == 0)
-                        {
-                            // We have an error.
-
-                        }
-                        else if (availablePlaces == 1)
-                        {
-                            sudoku.SetByCell(lastFoundCell, digitValue);
-                            modifiedCell = true;
-                        }
-                        else
-                        {
-                            // No conclusion
-                        }
-                    }
-                    else
-                    {
-                        // This digit has already been solved for.
                     }
                 }
             }
@@ -292,54 +300,44 @@ namespace Sudoku
             bool modifiedCell = false;
             for (int segment = 0; segment < Constants.SegmentCount; segment++)
             {
+                if (sudoku.Annotations_SegmentExtendedSum[segment] == Constants.SectionSolvedExtended)
+                    continue;
+
                 var baseRow = (segment / 3) * 3;
                 var baseColumn = (segment % 3) * 3;
+                var e = sudoku.Annotations_SegmentExtendedSum[segment];
                 for (int digit = 1; digit <= 9; digit++)
                 {
-                    var availablePlaces = 0;
+                    var mask = Constants.ValueExtendedMask[digit];
+                    var digitValue_Extended = Constants.ValuesExtended[digit];
                     var digitValue = Constants.Values[digit];
-                    var lastFoundCell = 0;
-                    if ((sudoku.Annotations_Segment[segment] & digitValue) != 0)
+
+                    if((e & mask) == digitValue_Extended)
                     {
                         for (int item = 0; item < Constants.SegmentSize; item++)
                         {
                             var cell = (baseRow + (item / 3)) * 9 + baseColumn + (item % 3);
                             if ((sudoku.Annotations_Cell[cell] & digitValue) != 0)
                             {
-                                availablePlaces++;
-                                lastFoundCell = cell;
+                                sudoku.SetByCell(cell, digitValue, digitValue_Extended);
+                                e = sudoku.Annotations_SegmentExtendedSum[segment];
+                                modifiedCell = true;
+                                break;
                             }
                         }
-                        if (availablePlaces == 0)
-                        {
-                            // We have an error.
-                            //throw new NotImplementedException();
-                        }
-                        else if (availablePlaces == 1)
-                        {
-                            sudoku.SetByCell(lastFoundCell, digitValue);
-                            modifiedCell = true;
-                        }
-                        else
-                        {
-                            // No conclusion
-                        }
-                    }
-                    else
-                    {
-                        // This digit has already been solved for.
                     }
                 }
             }
             return modifiedCell;
         }
 
-
         static bool PreemptiveSetsSearch_ByRow(FastSudoku sudoku)
         {
             bool modifiedCell = false;
             for (int row = 0; row < Constants.RowCount; row++)
             {
+                if (sudoku.Annotations_RowExtendedSum[row] == Constants.SectionSolvedExtended)
+                    continue;
                 var baseRowIndex = row * 9;
                 var annotationHash = new int[513];
                 for (int column = 0; column < Constants.ColumnCount; column++)
@@ -358,8 +356,9 @@ namespace Sudoku
                             var currentCellAnnotationValue = sudoku.Annotations_Cell[baseRowIndex + column];
                             if (currentCellAnnotationValue != annotationValue && currentCellAnnotationValue != Constants.Solved)
                             {
-                                sudoku.Annotations_Cell[baseRowIndex + column] &= ~annotationValue;
-                                if (currentCellAnnotationValue != sudoku.Annotations_Cell[baseRowIndex + column]) // Only if the annotation of another cell changes.
+                                var cell = Constants.RowColumn[row, column];
+                                sudoku.EliminateAnnotation(cell, annotationValue);
+                                if (currentCellAnnotationValue != sudoku.Annotations_Cell[cell]) // Only if the annotation of another cell changes.
                                     modifiedCell = true;
                             }
                         }
@@ -375,10 +374,13 @@ namespace Sudoku
             bool modifiedCell = false;
             for (int column = 0; column < Constants.ColumnCount; column++)
             {
+                if (sudoku.Annotations_ColumnExtendedSum[column] == Constants.SectionSolvedExtended)
+                    continue;
+
                 var annotationHash = new int[513];
                 for (int row = 0; row < Constants.RowCount; row++)
                 {
-                    annotationHash[sudoku.Annotations_Cell[row * 9 + column]]++;
+                    annotationHash[sudoku.Annotations_Cell[Constants.RowColumn[row, column]]]++;
                 }
                 for (int annotationValue = 0; annotationValue < 513; annotationValue++)
                 {
@@ -389,11 +391,12 @@ namespace Sudoku
                         // Remove these values from all other values in this column.
                         for (int row = 0; row < Constants.RowCount; row++)
                         {
-                            var currentCellAnnotationValue = sudoku.Annotations_Cell[row * 9 + column];
+                            var c = Constants.RowColumn[row, column];
+                            var currentCellAnnotationValue = sudoku.Annotations_Cell[c];
                             if (currentCellAnnotationValue != annotationValue && currentCellAnnotationValue != Constants.Solved)
                             {
-                                sudoku.Annotations_Cell[row * 9 + column] &= ~annotationValue;
-                                if (currentCellAnnotationValue != sudoku.Annotations_Cell[row * 9 + column]) // Only if the annotation of another cell changes.
+                                sudoku.EliminateAnnotation(c, annotationValue);
+                                if (currentCellAnnotationValue != sudoku.Annotations_Cell[c]) // Only if the annotation of another cell changes.
                                     modifiedCell = true;
                             }
                         }
@@ -409,6 +412,9 @@ namespace Sudoku
             bool modifiedCell = false;
             for (int segment = 0; segment < Constants.SegmentCount; segment++)
             {
+                if (sudoku.Annotations_SegmentExtendedSum[segment] == Constants.SectionSolvedExtended)
+                    continue;
+
                 var baseRow = (segment / 3) * 3;
                 var baseColumn = (segment % 3) * 3;
                 var annotationHash = new int[513];
@@ -430,7 +436,7 @@ namespace Sudoku
                             var currentCellAnnotationValue = sudoku.Annotations_Cell[cell];
                             if (currentCellAnnotationValue != annotationValue && currentCellAnnotationValue != Constants.Solved)
                             {
-                                sudoku.Annotations_Cell[cell] &= ~annotationValue;
+                                sudoku.EliminateAnnotation(cell, annotationValue);
                                 if (currentCellAnnotationValue != sudoku.Annotations_Cell[cell]) // Only if the annotation of another cell changes.
                                     modifiedCell = true;
                             }

@@ -36,7 +36,7 @@ namespace sudoku.tests
 
             // Act
             // Change One Value
-            sudoku.SetByCell(1, Constants.Values[7]); // Normally this is a 9.
+            sudoku.SetByCell(1, Constants.Values[7], Constants.ValuesExtended[7]); // Normally this is a 9.
 
             var isFinished = SudokuSolver.IsFinished(sudoku);
             var isValid = SudokuSolver.IsValid(sudoku);
