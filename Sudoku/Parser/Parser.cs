@@ -52,7 +52,7 @@ namespace Sudoku
             {
                 return ParseRows(sudoku, parserAttributes);
             }
-            throw new NotSupportedException("At least one of List or Rows must be turned on.");
+            throw new NotSupportedException("At least one of List, Rows, or Line must be turned on.");
         }
 
         public static string StringFromGrid(int[] sudokuGrid, ParserAttributes parserAttributes)
@@ -65,7 +65,7 @@ namespace Sudoku
             {
                 return ParseGridRows(sudokuGrid, parserAttributes);
             }
-            throw new NotSupportedException("At least one of List or Rows must be turned on.");
+            throw new NotSupportedException("At least one of List, Rows, or Line must be turned on.");
         }
 
         static char GetDelimiter(ParserAttributes attributes)
@@ -166,10 +166,11 @@ namespace Sudoku
             {
                 char digit = sudokuGrid[i] == 0 ? emptyDigit : (char)('0' + sudokuGrid[i]);
                 output.Append(digit);
-                if (emptyDigit != char.MinValue)
+                if (delimiter != char.MinValue)
                     output.Append(delimiter);
             }
             return output.ToString();
         }
+
     }
 }

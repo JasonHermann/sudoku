@@ -7,7 +7,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sudoku", "Sudoku.csproj", "
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "sudoku.tests", "..\sudoku.tests\sudoku.tests.csproj", "{5E844259-E209-4CB6-9AAB-B16A4500DD8C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenCv", "..\OpenCv\OpenCv.csproj", "{BB82EB33-A40F-4909-ABF5-7D8B73C7306F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenCv", "..\OpenCv\OpenCv.csproj", "{BB82EB33-A40F-4909-ABF5-7D8B73C7306F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "api", "..\api\api.csproj", "{CEDC94F1-9E04-466D-B796-7C083B29B6E5}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -27,6 +29,10 @@ Global
 		{BB82EB33-A40F-4909-ABF5-7D8B73C7306F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BB82EB33-A40F-4909-ABF5-7D8B73C7306F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BB82EB33-A40F-4909-ABF5-7D8B73C7306F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CEDC94F1-9E04-466D-B796-7C083B29B6E5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CEDC94F1-9E04-466D-B796-7C083B29B6E5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CEDC94F1-9E04-466D-B796-7C083B29B6E5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CEDC94F1-9E04-466D-B796-7C083B29B6E5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

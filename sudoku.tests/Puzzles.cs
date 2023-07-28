@@ -55,6 +55,14 @@ namespace sudoku.tests
                                                           "8 9 5 4 1 2 3 7 6 " +
                                                           "3 4 7 8 6 5 1 9 2";
 
+        public static readonly ParserAttributes Puzzle51Attributes_Line = ParserAttributes.List |
+                                                            ParserAttributes.NumberNotDelimited |
+                                                            ParserAttributes.EmptyAsZero;
+
+        public static readonly string Puzzle51_Unsolved_Line ="030791400"+"000200007"+"704600210"+"009008625"+"400000001"+"658100700"+"061007804"+"800002000"+"007865090";
+        public static readonly string Puzzle51_Solution_Line ="532791468"+"916284537"+"784653219"+"179348625"+"423576981"+"658129743"+"261937854"+"895412376"+"347865192";
+
+
         public static readonly ParserAttributes Puzzle119Attributes = ParserAttributes.List |
                                                                     ParserAttributes.NumberDelimitedBySpace |
                                                                     ParserAttributes.EmptyAsSpace;
